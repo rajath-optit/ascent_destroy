@@ -1,7 +1,4 @@
-workflow can dynamically handle the destruction of either VPC or EKS resources based on user input, while keeping the configuration organized and modular.
-
-.github/workflows/destroy-terraform-resources.yml
-
+#workflow can dynamically handle the destruction of either VPC or EKS resources based on user input, while keeping the configuration organized and modular.
 name: Destroy Terraform Resources #name of the workflow.
 
 # Trigger this workflow manually with workflow_dispatch
