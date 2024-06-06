@@ -1,0 +1,68 @@
+workflow can dynamically handle the destruction of either VPC or EKS resources based on user input, while keeping the configuration organized and modular.
+
+.github/workflows/destroy-terraform-resources.yml
+
+name: Destroy Terraform Resources #name of the workflow.
+
+# Trigger this workflow manually with workflow_dispatch
+on:
+  workflow_dispatch:
+    # Define the inputs for the manual trigger
+    inputs:
+      application_name:
+        description: 'Application Name'  # Description for the application name input
+        required: false                   # This input is not required,This allows the workflow to be triggered manually with defined inputs. Both inputs are optional.
+        default: ''                       # Default value for the input
+      aws_resource:
+        description: 'AWS Resource'       # Description for the AWS resource input
+        required: false                   # This input is not required
+        default: ''                       # Default value for the input
+
+jobs:
+  destroy:
+    # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest  #The job runs on the latest Ubuntu environment.
+
+    steps:
+    # Step to check out the repository
+    - name: Checkout repository
+      uses: actions/checkout@v2  # Use the checkout action to clone the repository,Clone the repository using the actions/checkout@v2 action.
+
+
+    # Step to set up Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1  # Use the setup-terraform action
+      with:
+        terraform_version: 1.8.5  # Specify the Terraform version to use
+
+
+    # Initialize and destroy VPC resources if application_name is provided
+    - name: Terraform Init VPC
+      if: ${{ github.event.inputs.application_name != '' }}
+      working-directory: ./app/vpc
+      run: terraform init
+#Run terraform init for the VPC module if the application_name input is provided.
+
+    - name: Terraform Destroy VPC
+      if: ${{ github.event.inputs.application_name != '' }}
+      working-directory: ./app/vpc
+      env:
+        TF_VAR_application_name: ${{ github.event.inputs.application_name }}
+      run: terraform destroy -auto-approve
+#Run terraform destroy -auto-approve for the VPC module if the application_name input is provided.
+
+    # Initialize and destroy EKS resources if aws_resource is provided
+    - name: Terraform Init EKS
+      if: ${{ github.event.inputs.aws_resource != '' }}
+      working-directory: ./app/eks
+      run: terraform init
+#Run terraform init for the EKS module if the aws_resource input is provided.
+
+    - name: Terraform Destroy EKS
+      if: ${{ github.event.inputs.aws_resource != '' }}
+      working-directory: ./app/eks
+      env:
+        TF_VAR_aws_resource: ${{ github.event.inputs.aws_resource }}
+      run: terraform destroy -auto-approve
+
+#Run terraform destroy -auto-approve for the EKS module if the aws_resource input is provided.
